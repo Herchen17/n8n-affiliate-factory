@@ -1,0 +1,219 @@
+{
+  "name": "Affiliate Content Factory - Core Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "affiliate-generator",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-input",
+      "name": "Webhook Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.affiliate_url }}",
+        "options": {}
+      },
+      "id": "scrape-product",
+      "name": "Scrape Product Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "messageType": "multipleMessages",
+          "messages": [
+            {
+              "role": "system",
+              "message": "You are an expert affiliate marketing content creator. Analyze the provided product information and create platform-specific promotional content that converts."
+            },
+            {
+              "role": "user", 
+              "message": "Product URL: {{ $json.affiliate_url }}\nProduct Data: {{ $node[\"Scrape Product Page\"].json.body }}\n\nTarget Audience: {{ $json.target_audience || 'General consumers interested in the product category' }}\n\nGenerate content for:\n1. TikTok (3 video scripts)\n2. X/Twitter (5 thread sequences)\n3. Instagram (4 carousel posts)\n4. YouTube Shorts (3 scripts)\n5. LinkedIn (2 professional posts)\n\nFormat each as JSON with platform, content_type, title, content, and engagement_hooks.\n\nEnsure affiliate link {{ $json.affiliate_url }} is embedded naturally in all content."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.8,
+          "maxTokens": 3000
+        }
+      },
+      "id": "generate-content",
+      "name": "Generate Platform Content", 
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse and structure the AI-generated content\nconst aiResponse = $input.first().json.choices[0].message.content;\n\ntry {\n  const contentData = JSON.parse(aiResponse);\n  \n  // Structure output by platform\n  const structuredOutput = {\n    affiliate_url: $('Webhook Input').first().json.body.affiliate_url,\n    generated_at: new Date().toISOString(),\n    content_by_platform: {},\n    total_pieces: 0\n  };\n  \n  // Group content by platform\n  contentData.forEach(item => {\n    if (!structuredOutput.content_by_platform[item.platform]) {\n      structuredOutput.content_by_platform[item.platform] = [];\n    }\n    structuredOutput.content_by_platform[item.platform].push({\n      type: item.content_type,\n      title: item.title,\n      content: item.content,\n      hooks: item.engagement_hooks,\n      ready_to_post: true\n    });\n    structuredOutput.total_pieces++;\n  });\n  \n  return [structuredOutput];\n  \n} catch (error) {\n  return [{\n    error: 'Failed to parse AI response',\n    raw_response: aiResponse,\n    affiliate_url: $('Webhook Input').first().json.body.affiliate_url\n  }];\n}"
+      },
+      "id": "structure-output",
+      "name": "Structure Content Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-success",
+      "name": "Check Generation Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "baseId": "{{ $vars.AIRTABLE_BASE_ID }}",
+        "tableId": "{{ $vars.AIRTABLE_TABLE_ID }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "affiliate_url": "={{ $json.affiliate_url }}",
+            "generated_at": "={{ $json.generated_at }}",
+            "total_pieces": "={{ $json.total_pieces }}",
+            "content_data": "={{ JSON.stringify($json.content_by_platform) }}",
+            "status": "Generated"
+          }
+        }
+      },
+      "id": "save-to-airtable",
+      "name": "Save to Content Database",
+      "type": "n8n-nodes-base.airtable", 
+      "typeVersion": 2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json", 
+        "responseBody": "={{ JSON.stringify({error: 'Content generation failed', details: $json}) }}"
+      },
+      "id": "error-response", 
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Webhook Input": {
+      "main": [
+        [
+          {
+            "node": "Scrape Product Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Product Page": {
+      "main": [
+        [
+          {
+            "node": "Generate Platform Content",
+            "type": "main", 
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Platform Content": {
+      "main": [
+        [
+          {
+            "node": "Structure Content Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structure Content Output": {
+      "main": [
+        [
+          {
+            "node": "Check Generation Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Generation Success": {
+      "main": [
+        [
+          {
+            "node": "Save to Content Database",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Content Database": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-02-01T00:40:00.000Z",
+  "versionId": "1"
+}

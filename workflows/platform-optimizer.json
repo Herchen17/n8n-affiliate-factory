@@ -1,0 +1,119 @@
+{
+  "name": "Platform Content Optimizer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "optimize-content",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-optimizer",
+      "name": "Content Optimization Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Platform-specific content optimization\nconst input = $input.first().json.body;\nconst contentData = input.content_by_platform;\n\n// Platform optimization rules\nconst optimizations = {\n  tiktok: {\n    maxLength: 2200,\n    hooks: ['POV:', 'This changed everything:', 'Watch this:', 'You need to see this:'],\n    ctas: ['Link in bio', 'Try this now', 'Don\\'t miss out', 'Comment if you want the link'],\n    trending_sounds: ['original sound', 'trending audio', 'viral sound'],\n    hashtags: ['#fyp', '#viral', '#trending']\n  },\n  twitter: {\n    maxLength: 280,\n    threadStarters: ['🧵 Thread:', '📈 Here\\'s why:', '💡 Quick insight:', '🔥 Hot take:'],\n    engagement: ['RT if you agree', 'Thoughts?', 'What\\'s your experience?'],\n    hashtags: ['#TwitterThread', '#MustRead']\n  },\n  instagram: {\n    maxCaptionLength: 2200,\n    carouselSlides: 10,\n    ctas: ['Link in bio', 'Save this post', 'Share with friends', 'DM for details'],\n    hashtags: ['#instagram', '#viral', '#trending'],\n    engagement: ['Double tap if you agree', 'Save for later']\n  },\n  youtube: {\n    maxLength: 125, // For shorts descriptions\n    hooks: ['You won\\'t believe this', 'This is crazy', 'Mind = blown'],\n    ctas: ['Subscribe for more', 'Like if this helped', 'Comment below'],\n    trending: ['#Shorts', '#Trending', '#MustWatch']\n  },\n  linkedin: {\n    maxLength: 3000,\n    professional: ['Key insight:', 'Industry update:', 'Professional tip:'],\n    ctas: ['What are your thoughts?', 'Agree or disagree?', 'Share your experience'],\n    hashtags: ['#Business', '#Professional', '#Industry']\n  }\n};\n\n// Optimize content for each platform\nconst optimizedContent = {};\n\nfor (const [platform, content] of Object.entries(contentData)) {\n  const rules = optimizations[platform] || {};\n  \n  optimizedContent[platform] = content.map((item, index) => {\n    let optimizedItem = { ...item };\n    \n    // Apply length constraints\n    if (rules.maxLength && item.content.length > rules.maxLength) {\n      optimizedItem.content = item.content.substring(0, rules.maxLength - 20) + '...';\n      optimizedItem.truncated = true;\n    }\n    \n    // Add platform-specific hooks\n    if (rules.hooks && rules.hooks.length > 0) {\n      const randomHook = rules.hooks[Math.floor(Math.random() * rules.hooks.length)];\n      if (!optimizedItem.content.toLowerCase().includes('pov:') && \n          !optimizedItem.content.toLowerCase().includes('🧵') &&\n          platform === 'tiktok') {\n        optimizedItem.content = randomHook + ' ' + optimizedItem.content;\n      }\n    }\n    \n    // Add platform-specific CTAs\n    if (rules.ctas && rules.ctas.length > 0) {\n      const randomCta = rules.ctas[Math.floor(Math.random() * rules.ctas.length)];\n      if (!optimizedItem.content.toLowerCase().includes('link') && \n          !optimizedItem.content.toLowerCase().includes('bio')) {\n        optimizedItem.content += '\\n\\n' + randomCta;\n      }\n    }\n    \n    // Add hashtags\n    if (rules.hashtags && rules.hashtags.length > 0) {\n      const hashtagString = rules.hashtags.join(' ');\n      optimizedItem.content += '\\n\\n' + hashtagString;\n    }\n    \n    // Platform-specific metadata\n    optimizedItem.platform_metadata = {\n      optimal_posting_times: getOptimalTimes(platform),\n      content_type_priority: getContentTypePriority(platform),\n      engagement_strategy: getEngagementStrategy(platform)\n    };\n    \n    return optimizedItem;\n  });\n}\n\n// Helper functions\nfunction getOptimalTimes(platform) {\n  const times = {\n    tiktok: ['6-10am', '7-9pm'],\n    twitter: ['9am-10am', '12pm-1pm', '5pm-6pm'],\n    instagram: ['6am-9am', '12pm-2pm', '5pm-7pm'],\n    youtube: ['2pm-4pm', '8pm-11pm'],\n    linkedin: ['8am-10am', '12pm-2pm', '5pm-6pm']\n  };\n  return times[platform] || ['9am-5pm'];\n}\n\nfunction getContentTypePriority(platform) {\n  const priorities = {\n    tiktok: ['video', 'carousel', 'story'],\n    twitter: ['thread', 'single_tweet', 'quote_tweet'],\n    instagram: ['carousel', 'reel', 'story', 'post'],\n    youtube: ['short', 'video', 'community_post'],\n    linkedin: ['article', 'post', 'carousel']\n  };\n  return priorities[platform] || ['post'];\n}\n\nfunction getEngagementStrategy(platform) {\n  const strategies = {\n    tiktok: 'Hook within 3 seconds, trending sounds, jump cuts',\n    twitter: 'Controversial takes, data-driven threads, quote tweets',\n    instagram: 'Aesthetic visuals, carousel education, story polls',\n    youtube: 'Tutorial format, before/after, strong thumbnails',\n    linkedin: 'Professional insights, industry trends, thought leadership'\n  };\n  return strategies[platform] || 'General engagement';\n}\n\nreturn [{\n  affiliate_url: input.affiliate_url,\n  optimization_applied: true,\n  optimized_at: new Date().toISOString(),\n  total_pieces: Object.values(optimizedContent).reduce((sum, arr) => sum + arr.length, 0),\n  content_by_platform: optimizedContent,\n  optimization_summary: {\n    platforms_optimized: Object.keys(optimizedContent).length,\n    rules_applied: ['length_constraints', 'platform_hooks', 'cta_optimization', 'hashtag_addition', 'metadata_enhancement']\n  }\n}];"
+      },
+      "id": "apply-optimizations",
+      "name": "Apply Platform Optimizations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-3.5-turbo",
+        "messages": {
+          "messageType": "multipleMessages",
+          "messages": [
+            {
+              "role": "system",
+              "message": "You are a social media optimization expert. Your job is to add final polish to content for maximum engagement on each platform. Focus on trending elements, optimal formatting, and platform-specific best practices."
+            },
+            {
+              "role": "user",
+              "message": "Platform: {{ $json.platform }}\nContent Type: {{ $json.content_type }}\nCurrent Content: {{ $json.content }}\n\nOptimize this content for maximum engagement on {{ $json.platform }}. Consider:\n- Current trends and viral formats\n- Platform algorithm preferences  \n- Optimal hashtag usage\n- Engagement hooks and CTAs\n- Visual/format recommendations\n\nReturn the optimized content with a brief explanation of changes made."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 1000
+        }
+      },
+      "id": "ai-polish",
+      "name": "AI Content Polish",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final content packaging for deployment\nconst optimizedData = $('Apply Platform Optimizations').first().json;\n\n// Package for easy deployment\nconst deploymentPackage = {\n  campaign_info: {\n    affiliate_url: optimizedData.affiliate_url,\n    total_content_pieces: optimizedData.total_pieces,\n    optimization_applied: true,\n    ready_for_deployment: true,\n    generated_at: optimizedData.optimized_at\n  },\n  \n  deployment_ready_content: {},\n  \n  posting_schedule: generatePostingSchedule(optimizedData.content_by_platform),\n  \n  performance_tracking: {\n    kpis_to_track: ['engagement_rate', 'click_through_rate', 'conversion_rate', 'reach'],\n    tracking_links: generateTrackingLinks(optimizedData.affiliate_url),\n    expected_performance: estimatePerformance(optimizedData.content_by_platform)\n  }\n};\n\n// Format content for immediate posting\nfor (const [platform, content] of Object.entries(optimizedData.content_by_platform)) {\n  deploymentPackage.deployment_ready_content[platform] = content.map((item, index) => ({\n    id: `${platform}_${index + 1}`,\n    platform: platform,\n    type: item.type,\n    title: item.title,\n    content: item.content,\n    optimal_posting_time: item.platform_metadata.optimal_posting_times[0],\n    priority_score: calculatePriorityScore(item, platform),\n    ready_to_post: true,\n    tracking_enabled: true\n  }));\n}\n\nfunction generatePostingSchedule(contentByPlatform) {\n  const schedule = [];\n  let dayOffset = 0;\n  \n  for (const [platform, content] of Object.entries(contentByPlatform)) {\n    content.forEach((item, index) => {\n      const postDate = new Date();\n      postDate.setDate(postDate.getDate() + Math.floor((dayOffset + index) / 3)); // 3 posts per day\n      \n      schedule.push({\n        platform: platform,\n        content_id: `${platform}_${index + 1}`,\n        scheduled_time: postDate.toISOString(),\n        priority: item.platform_metadata ? 'high' : 'medium'\n      });\n    });\n    dayOffset += content.length;\n  }\n  \n  return schedule.sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));\n}\n\nfunction generateTrackingLinks(baseUrl) {\n  return {\n    tiktok: baseUrl + '&utm_source=tiktok&utm_medium=video',\n    twitter: baseUrl + '&utm_source=twitter&utm_medium=thread', \n    instagram: baseUrl + '&utm_source=instagram&utm_medium=carousel',\n    youtube: baseUrl + '&utm_source=youtube&utm_medium=shorts',\n    linkedin: baseUrl + '&utm_source=linkedin&utm_medium=post'\n  };\n}\n\nfunction estimatePerformance(contentByPlatform) {\n  return {\n    estimated_reach: Object.keys(contentByPlatform).length * 1000,\n    estimated_engagement: '2-5%',\n    estimated_clicks: '50-200',\n    estimated_conversions: '5-20',\n    confidence_level: 'Medium (based on platform averages)'\n  };\n}\n\nfunction calculatePriorityScore(item, platform) {\n  let score = 50; // Base score\n  \n  // Platform-specific bonuses\n  const platformMultiplier = {\n    tiktok: 1.3,\n    instagram: 1.2, \n    twitter: 1.1,\n    youtube: 1.2,\n    linkedin: 1.0\n  };\n  \n  score *= (platformMultiplier[platform] || 1.0);\n  \n  // Content quality indicators\n  if (item.content && item.content.includes('link in bio')) score += 10;\n  if (item.hooks && item.hooks.length > 2) score += 10;\n  if (item.content && item.content.length > 100 && item.content.length < 500) score += 5;\n  \n  return Math.min(100, Math.round(score));\n}\n\nreturn [deploymentPackage];"
+      },
+      "id": "package-deployment",
+      "name": "Package for Deployment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json, null, 2) }}"
+      },
+      "id": "deployment-response",
+      "name": "Deployment Package Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Content Optimization Input": {
+      "main": [
+        [
+          {
+            "node": "Apply Platform Optimizations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Platform Optimizations": {
+      "main": [
+        [
+          {
+            "node": "Package for Deployment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Package for Deployment": {
+      "main": [
+        [
+          {
+            "node": "Deployment Package Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-02-01T00:45:00.000Z",
+  "versionId": "1"
+}

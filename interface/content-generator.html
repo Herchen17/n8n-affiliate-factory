@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Content Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 8px; font-size: 28px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 16px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #007acc; }
+        .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 8px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; }
+        .checkbox-item input[type="checkbox"] { width: auto; }
+        button { background: #007acc; color: white; padding: 15px 30px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+        button:hover { background: #0066aa; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .loading { display: none; text-align: center; margin: 20px 0; }
+        .results { margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; display: none; }
+        .error { color: #d73a49; background: #ffeaea; padding: 15px; border-radius: 8px; margin-top: 20px; display: none; }
+        .success { color: #28a745; background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 20px; display: none; }
+        .content-preview { background: white; margin: 10px 0; padding: 15px; border-radius: 6px; border-left: 4px solid #007acc; }
+        .platform-tag { display: inline-block; background: #007acc; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪖 Affiliate Content Factory</h1>
+        <p class="subtitle">Transform any affiliate link into 25+ pieces of platform-optimized content</p>
+        
+        <form id="contentGenerator">
+            <div class="form-group">
+                <label for="affiliateUrl">Affiliate URL *</label>
+                <input type="url" id="affiliateUrl" name="affiliate_url" required 
+                       placeholder="https://whop.com/product?a=yourlink">
+            </div>
+            
+            <div class="form-group">
+                <label for="targetAudience">Target Audience</label>
+                <input type="text" id="targetAudience" name="target_audience" 
+                       placeholder="e.g., Pokemon card collectors, fitness enthusiasts">
+            </div>
+            
+            <div class="form-group">
+                <label for="contentQuantity">Content Pieces Per Platform</label>
+                <select id="contentQuantity" name="content_quantity">
+                    <option value="3">3 pieces (Fast)</option>
+                    <option value="5" selected>5 pieces (Recommended)</option>
+                    <option value="7">7 pieces (Maximum)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Target Platforms</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="tiktok" name="platforms" value="tiktok" checked>
+                        <label for="tiktok">TikTok</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="twitter" name="platforms" value="twitter" checked>
+                        <label for="twitter">X/Twitter</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="instagram" name="platforms" value="instagram" checked>
+                        <label for="instagram">Instagram</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="youtube" name="platforms" value="youtube" checked>
+                        <label for="youtube">YouTube</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="linkedin" name="platforms" value="linkedin" checked>
+                        <label for="linkedin">LinkedIn</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>International Markets</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="us" name="markets" value="US" checked>
+                        <label for="us">United States</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="uk" name="markets" value="UK">
+                        <label for="uk">United Kingdom</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="au" name="markets" value="AU">
+                        <label for="au">Australia</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="ca" name="markets" value="CA">
+                        <label for="ca">Canada</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="webhookUrl">N8N Webhook URL *</label>
+                <input type="url" id="webhookUrl" name="webhook_url" required 
+                       placeholder="https://your-n8n-instance.com/webhook/affiliate-generator">
+            </div>
+            
+            <button type="submit">🚀 Generate Content Arsenal</button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <p>⚡ Generating content arsenal... (30-60 seconds)</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+        <div class="results" id="results"></div>
+    </div>
+    
+    <script>
+        document.getElementById('contentGenerator').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const success = document.getElementById('success');
+            const results = document.getElementById('results');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            // Hide previous results
+            [error, success, results].forEach(el => el.style.display = 'none');
+            
+            // Show loading
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+            
+            // Collect form data
+            const platforms = Array.from(document.querySelectorAll('input[name="platforms"]:checked')).map(cb => cb.value);
+            const markets = Array.from(document.querySelectorAll('input[name="markets"]:checked')).map(cb => cb.value);
+            
+            const requestData = {
+                affiliate_url: formData.get('affiliate_url'),
+                target_audience: formData.get('target_audience'),
+                content_quantity: parseInt(formData.get('content_quantity')),
+                platforms: platforms,
+                international_markets: markets
+            };
+            
+            try {
+                const webhookUrl = formData.get('webhook_url');
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                // Show success
+                success.textContent = `✅ Generated ${result.total_pieces} pieces of content successfully!`;
+                success.style.display = 'block';
+                
+                // Show results preview
+                displayResults(result);
+                
+            } catch (err) {
+                error.textContent = `❌ Generation failed: ${err.message}`;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+        
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            let html = `<h3>🎯 Content Arsenal Generated</h3>`;
+            html += `<p><strong>Total Pieces:</strong> ${data.total_pieces}</p>`;
+            html += `<p><strong>Affiliate URL:</strong> <a href="${data.affiliate_url}" target="_blank">${data.affiliate_url}</a></p>`;
+            
+            for (const [platform, content] of Object.entries(data.content_by_platform || {})) {
+                html += `<div class="content-preview">`;
+                html += `<div class="platform-tag">${platform}</div>`;
+                html += `<strong>${content.length} pieces</strong><br>`;
+                content.slice(0, 2).forEach(item => {
+                    html += `<div style="margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 4px;">`;
+                    html += `<strong>${item.title || item.type}</strong><br>`;
+                    html += `<small>${(item.content || '').substring(0, 100)}...</small>`;
+                    html += `</div>`;
+                });
+                if (content.length > 2) {
+                    html += `<small>+ ${content.length - 2} more pieces...</small>`;
+                }
+                html += `</div>`;
+            }
+            
+            results.innerHTML = html;
+            results.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
