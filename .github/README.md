@@ -9,27 +9,26 @@
 
 ## 🎯 What This Does
 
-**Input:** Any Whop affiliate URL  
-**Output:** 25+ ready-to-post content pieces across all major platforms  
-**Time:** 2-5 minutes per campaign  
-**Platforms:** TikTok, X/Twitter, Instagram, YouTube, LinkedIn
+Input: **Any Whop affiliate URL**  
+Output: **25+ ready-to-post content pieces** across all major platforms  
+Time: **2-5 minutes per campaign**  
+Platforms: **TikTok, X/Twitter, Instagram, YouTube, LinkedIn**
 
 ## 🚀 Quick Deploy (5 Minutes)
 
-### 1. Import Workflow
-- Download `workflows/affiliate-core-workflow.json`
-- In N8N: **Workflows → Import from File**
-- **Activate** the workflow
+1. **Import Workflow:**
+   - Download `workflows/affiliate-core-workflow.json`
+   - In N8N: Workflows → Import from File
+   - Activate the workflow
 
-### 2. Add API Key
-- N8N **Settings → Credentials → Add OpenAI**
-- Name: `openai-content-generator`
-- Add your OpenAI API key
+2. **Add API Key:**
+   - N8N Settings → Credentials → Add OpenAI
+   - Name: `openai-content-generator`
 
-### 3. Test System
-- Open `interface/content-generator.html` 
-- Enter your affiliate URL + N8N webhook URL
-- Hit **"Generate Content Arsenal"**
+3. **Test:**
+   - Open `interface/content-generator.html` 
+   - Enter your affiliate URL + N8N webhook URL
+   - Hit "Generate Content Arsenal"
 
 ## 📊 System Performance
 
@@ -38,32 +37,6 @@
 - **International Support:** US, UK, AU, CA variants  
 - **Cost per Campaign:** ~$0.75 OpenAI tokens
 - **Expected ROI:** 10x within first month
-
-## 🏗️ Pipeline Architecture
-
-```
-INPUT (Webhook/Form)
-├── Affiliate URL
-├── Target Demographics  
-├── Content Quantity (3-5 per platform)
-└── International Markets
-
-PROCESSING CHAIN
-├── 1. Product Research (Web Scraping)
-├── 2. Competitor Analysis (Search API)
-├── 3. Content Generation (OpenAI)
-├── 4. Platform Optimization (Format Conversion)
-├── 5. Localization (Multi-market adaptation)
-└── 6. Output Package (Structured delivery)
-
-OUTPUT
-├── TikTok Scripts (3-5)
-├── X/Twitter Threads (5)  
-├── Instagram Carousels (4)
-├── YouTube Shorts Scripts (3)
-├── LinkedIn Posts (2)
-└── International Variants
-```
 
 ## 🛠️ What's Included
 
@@ -96,6 +69,14 @@ docs/
 
 All content includes your affiliate link naturally embedded.
 
+## 🎛️ Advanced Features
+
+- **Smart Optimization:** Platform-specific hooks, hashtags, CTAs
+- **International Variants:** Multi-market content adaptation
+- **Performance Tracking:** Built-in analytics and optimization
+- **Batch Processing:** Handle multiple campaigns simultaneously
+- **A/B Testing:** Generate content variations for optimization
+
 ## 💰 Revenue Potential
 
 **Month 1:** $5K+ affiliate commissions  
@@ -109,6 +90,12 @@ All content includes your affiliate link naturally embedded.
 - N8N instance (cloud or self-hosted)
 - OpenAI API key
 - Optional: Airtable for content tracking
+
+## 📞 Support
+
+Built for affiliate marketers who want to dominate with content volume and quality.
+
+**Deploy once. Scale infinitely. Dominate markets.**
 
 ---
 
